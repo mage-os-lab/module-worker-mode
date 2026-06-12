@@ -1,0 +1,160 @@
+# =============================================================================
+# FrankenPHP embedded Caddyfile — Mage-OS
+# This is the internal Caddy config used by FrankenPHP inside the app container.
+# It serves Magento on port 80 (plain HTTP). TLS termination is handled upstream
+# by the external Caddy reverse proxy.
+#
+# Three workers:
+#   static-worker        — handles /static/* via static.php
+#   media-worker         — handles /media/* via get.php
+#   web-worker           — handles all other requests via index.php
+#
+# The opengento/frankenphp-magento package makes pub/index.php and
+# pub/static.php FrankenPHP worker-compatible. Ensure it is installed
+# and up to date in composer.json.
+# =============================================================================
+
+{
+    admin off
+
+    frankenphp {
+        worker {
+            file /app/pub/static.php
+            match /static/*|/static.php
+            name static-worker
+        }
+
+        worker {
+            file /app/pub/get.php
+            match /media/*|/get.php
+            name media-worker
+        }
+
+        worker {
+            file /app/pub/index.php
+            name web-worker
+        }
+    }
+
+    order php_server before file_server
+}
+
+(404) {
+	rewrite * /errors/404.php
+    php_server
+    file_server
+}
+
+:80 {
+    root * /app/pub
+    encode zstd br gzip
+
+    # -------------------------------------------------------------------------
+    # Blocked paths — return 4xx before any PHP processing
+    # -------------------------------------------------------------------------
+    # Deny access to sensitive files and directories
+    @sensitiveFiles {
+        path_regexp sensitiveFiles /(\.user.ini|\.php$|.*\.phtml$|\.htaccess$|\.htpasswd$|\.git|.*\.txt|.*\.md|errors\/.*\.xml|media\/theme_customization\/.*\.xml)
+    }
+    @sensitiveDirectories {
+        path_regexp sensitiveDirectories /(media\/customer\/*|media\/downloadable\/*|media\/import\/*|media\/custom_options\/*|setup\/*)
+    }
+
+    # Rewrite to 404 for sensitive files and directories
+    handle @sensitiveFiles {
+        import 404
+    }
+    handle @sensitiveDirectories {
+        import 404
+    }
+
+    # -------------------------------------------------------------------------
+    # Response headers
+    # -------------------------------------------------------------------------
+    header {
+        # Reduce cache misses for UTM / tracking params — browser-level hint
+        +No-Vary-Search `key-order, params=("utm_source" "utm_medium" "utm_campaign" "utm_term" "utm_content" "gclid" "fbclid" "msclkid" "srsltid")`
+    }
+
+    header /media X-Frame-Options "SAMEORIGIN"
+    header /static X-Frame-Options "SAMEORIGIN"
+    header / X-Content-Type-Options "nosniff"
+
+    # -------------------------------------------------------------------------
+    # Static files — versioned URL rewrite + long-lived caching
+    # Magento appends /static/version{N}/ to asset URLs. Strip the version
+    # segment so the real file is served; fall back to static.php for
+    # dynamically generated assets.
+    # -------------------------------------------------------------------------
+    @staticPath path_regexp reg_static ^/static/(version\d*/)?(.*)$
+    handle @staticPath {
+        @static file /static/{re.reg_static.2}
+        rewrite @static /static/{re.reg_static.2}
+
+        @staticFiles {
+            path *.ico *.jpg *.jpeg *.png *.gif *.svg *.svgz *.webp *.avif *.avifs *.js *.css *.eot *.ttf *.otf *.woff *.woff2 *.html *.json *.webmanifest
+        }
+        handle @staticFiles {
+            # Set headers for matched static assets
+            header Cache-Control "public, max-age=31536000"
+        }
+        @noCacheFiles {
+            path *.zip *.gz *.gzip *.bz2 *.csv *.xml
+        }
+        handle @noCacheFiles {
+            # Set Cache-Control header to no-store
+            header Cache-Control "no-store, no-cache, must-revalidate"
+        }
+
+        @dynamic not file /static/{re.reg_static.2}
+        rewrite @dynamic /static.php?resource={re.reg_static.2}
+        header X-Frame-Options "SAMEORIGIN"
+
+        php_server
+        file_server
+    }
+
+    # -------------------------------------------------------------------------
+    # Media files — long-lived caching, fall back to get.php
+    # -------------------------------------------------------------------------
+    route /media/* {
+        @staticFiles {
+            path *.ico *.jpg *.jpeg *.png *.gif *.svg *.svgz *.webp *.avif *.avifs *.js *.css *.eot *.ttf *.otf *.woff *.woff2
+        }
+        handle @staticFiles {
+            # Set Cache-Control header for 1 year caching
+            header Cache-Control "public, max-age=31536000"
+        }
+        @noCacheFiles {
+            path *.zip *.gz *.gzip *.bz2 *.csv *.xml
+        }
+        handle @noCacheFiles {
+            # Set Cache-Control header to no-store
+            header Cache-Control "no-store, no-cache, must-revalidate"
+        }
+
+        # try_files {path} {path}/ /get.php{query}
+        # header X-Frame-Options "SAMEORIGIN"
+
+        @dynamic not file {path}
+        rewrite @dynamic /get.php{query}
+
+        php_server
+        file_server
+    }
+
+    # -------------------------------------------------------------------------
+    # All other requests — standard PHP/worker routing
+    # php_server handles try_files behaviour: serves existing files directly,
+    # routes everything else through index.php via the web-worker.
+    # -------------------------------------------------------------------------
+
+    handle_errors 404 403 {
+    	import 404
+    }
+
+    route {
+        php_server
+        file_server
+    }
+}

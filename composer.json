@@ -1,0 +1,32 @@
+{
+    "name": "reessolutions/module-worker-mode",
+    "description": "FrankenPHP worker-mode compatibility fixes for Reessolutions projects",
+    "type": "magento2-module",
+    "version": "1.0.0",
+    "minimum-stability": "stable",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Mark Rees",
+            "email": "mark@rees.solutions",
+            "homepage": "http://www.rees.solutions/",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "extensions@rees.solutions"
+    },
+    "require": {
+        "php": "~8.0.0 || ~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+        "opengento/magento2-frankenphp-base": "^0.9.4",
+        "opengento/module-application": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Reessolutions\\WorkerMode\\": ""
+        }
+    }
+}

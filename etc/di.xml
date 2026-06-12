@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Rees Solutions. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--
+        Prefer our Page\Config subclass so the Resetter calls _resetState() directly.
+        reset.json's ReflectionProperty approach silently fails on PHP 8.4 lazy ghosts: setValue()
+        from the parent-class ReflectionProperty writes into the parent scope on the Interceptor ghost,
+        but running code reads the Interceptor scope (still uninitialized), triggering the lazy
+        initializer and overwriting the reset. Our subclass implements ResetAfterRequestInterface so
+        the Resetter calls _resetState() as a method — which initializes the ghost first and then
+        writes into the live property slot that running code actually uses.
+        See: Reessolutions\WorkerMode\View\Page\Config for the full explanation.
+    -->
+    <preference for="Magento\Framework\View\Page\Config"
+                type="Reessolutions\WorkerMode\View\Page\Config"/>
+
+    <!--
+        Prefer our Design subclass so the Resetter calls _resetState() directly.
+        reset.json's ReflectionProperty approach silently fails on PHP 8.4 lazy ghosts for the same
+        reason as Page\Config: setValue() from the parent-class ReflectionProperty writes into the
+        parent scope on the Interceptor ghost, but running code reads the Interceptor scope (still
+        uninitialized), triggering the lazy initializer which overwrites the reset.
+        Result: _area persists as 'webapi_rest' across requests — frontend pages render with
+        webapi_rest area CSS URLs and a blank body.
+    -->
+    <preference for="Magento\Theme\Model\View\Design"
+                type="Reessolutions\WorkerMode\Model\View\Design"/>
+
+    <!--
+        Plugin on Page\Config::getElementAttributes() to ensure html.lang is always present.
+        _resetState() clears elements=[], which wipes the html.lang set in the constructor.
+        Without html.lang, document.documentElement.lang is "" and Intl.NumberFormat breaks
+        (ElasticSuite price slider).
+    -->
+    <type name="Magento\Framework\View\Page\Config">
+        <plugin name="reessolutions_worker_mode_html_lang_attribute"
+                type="Reessolutions\WorkerMode\Plugin\View\Page\ConfigPlugin"/>
+    </type>
+
+    <!--
+        Prefer our Layout subclass so the Resetter calls _resetState() directly (ResetAfterRequestInterface).
+        This resets readerContext (not covered by opengento's reset.json) which otherwise carries stale
+        scheduledPaths from request 1 — causing _overrideElementWorkaround to delete head.js and
+        head.hyva-scripts when the theme re-declares head.additional on request 2+.
+        Also resets _xml so stale merged layout XML from the previous request does not cause
+        isCacheable() to incorrectly treat the checkout success page as cacheable.
+    -->
+    <preference for="Magento\Framework\View\Layout"
+                type="Reessolutions\WorkerMode\Model\View\Layout"/>
+
+    <!--
+        The opengento/module-application worker package sets isIsolated=true on Page and Layout result
+        types so each request gets a private layout instance. This breaks Hyvä's ProductListItem view
+        model, which holds the shared LayoutInterface singleton and calls getBlock() on it — blocks
+        are never found because they live in the isolated instance instead.
+
+        The reset.json mechanism (Resetter) already resets Layout state between requests, so isolation
+        is not needed. Setting isIsolated=false restores the shared singleton behaviour.
+    -->
+    <type name="Magento\Framework\View\Result\Page">
+        <arguments>
+            <argument name="isIsolated" xsi:type="boolean">false</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\View\Result\Layout">
+        <arguments>
+            <argument name="isIsolated" xsi:type="boolean">false</argument>
+        </arguments>
+    </type>
+
+    <!--
+        Reset the opengento session registry between requests so each request only manages the
+        sessions it actually starts. The base SessionRegistry does not implement
+        ResetAfterRequestInterface, so its WeakMap accumulates sessions from every previous request
+        on this worker. startSessions() then calls start() on all of them at the top of each new
+        request — including sessions from a different area. This causes, for example, CustomerSession
+        (from a prior frontend request) to be started inside an admin request with frontend session
+        config (session.cookie_path='/'), which makes admin login's regenerateId() send
+        Set-Cookie: PHPSESSID=<new_id>; Path='/' — overwriting the browser's frontend cookie. Our
+        subclass clears the WeakMap in _resetState(); sessions are lazily started as normal instead.
+    -->
+    <preference for="Opengento\Application\App\Session\SessionRegistry"
+                type="Reessolutions\WorkerMode\App\Session\SessionRegistry"/>
+
+    <!--
+        FrontendConfig requires a scopeType so _scopeConfig->getValue() uses 'default' scope for
+        cookie settings (path, domain, lifetime) — matching the behaviour of the generic
+        Magento\Framework\Session\Config which is globally configured with SCOPE_TYPE_DEFAULT
+        in magento2-base app/etc/di.xml.
+    -->
+    <type name="Reessolutions\WorkerMode\Session\FrontendConfig">
+        <arguments>
+            <argument name="scopeType" xsi:type="const">Magento\Framework\App\Config\ScopeConfigInterface::SCOPE_TYPE_DEFAULT</argument>
+        </arguments>
+    </type>
+
+    <!--
+        Restore the correct area ObjectManager as getInstance() target before each request.
+
+        ObjectManager::$_instance is a static property overwritten by every new OM constructor.
+        After the first webapi_rest (or adminhtml) bootstrap, getInstance() returns the wrong area's
+        OM for all subsequent frontend requests. FrontController lazily inits appState via getInstance()
+        and then calls areaList.getArea('webapi_rest'), which runs _initDesign() and stamps
+        Design._area = 'webapi_rest'. This plugin sets $_instance = the creating bootstrap's OM before
+        the scope-specific plugin chain runs, restoring correct getInstance() behaviour for the request.
+    -->
+    <type name="Opengento\Application\App\Http">
+        <plugin name="reessolutions_worker_mode_om_context"
+                type="Reessolutions\WorkerMode\Plugin\App\ObjectManagerContextPlugin"
+                sortOrder="1"/>
+    </type>
+
+    <!--
+        Clear Area._loadedParts['design'] between requests so _initDesign() re-runs.
+
+        After the first request, _loadedParts['design'] = true causes load(PART_DESIGN) to be a
+        no-op on every subsequent request. Since Design._resetState() clears _area and _theme, the
+        Area must re-run _initDesign() to call setArea() + setDefaultDesignTheme() and restore the
+        correct theme so asset URLs use the right area/theme path instead of '_view'.
+    -->
+    <preference for="Magento\Framework\App\Area"
+                type="Reessolutions\WorkerMode\Model\App\Area"/>
+
+    <!--
+        Clear Hyva\Theme\ViewModel\HyvaCsp memoized state between requests in FrankenPHP worker mode.
+
+        HyvaCsp caches $memoizedPolicies (collected CSP fetch policies) and $memoizedAreaCode
+        in private properties after the first call. In worker mode these persist across requests.
+        If any request populates $memoizedPolicies without unsafe-eval (e.g. strict-CSP checkout),
+        all subsequent requests serve alpine3-csp.min.js (the CSP Alpine build) site-wide. The CSP
+        Alpine build cannot evaluate string expressions, so every Alpine component throws an error.
+
+        Our subclass implements ResetAfterRequestInterface; _resetState() nullifies both private
+        parent properties via reflection so each request re-collects policies fresh.
+    -->
+    <preference for="Hyva\Theme\ViewModel\HyvaCsp"
+                type="Reessolutions\WorkerMode\ViewModel\HyvaCsp"/>
+
+</config>

@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Rees Solutions. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--
+        Reset the admin ButtonList between requests in FrankenPHP worker mode.
+
+        Widget\Context is a shared singleton that holds the ButtonList injected at construction.
+        ButtonList is declared shared="false" but is never re-created because Widget\Context is a
+        shared singleton that keeps the same instance forever. Each admin page calls ButtonList::add()
+        on the shared instance, so buttons from previous screens accumulate and duplicate on every
+        subsequent page.
+
+        Our Widget\Context subclass implements ResetAfterRequestInterface; _resetState() clears
+        _buttons back to the initial [-1=>[], 0=>[], 1=>[]] structure after each request.
+    -->
+    <preference for="Magento\Backend\Block\Widget\Context"
+                type="Reessolutions\WorkerMode\Block\Backend\Widget\Context"/>
+
+    <!--
+        CustomerSessionPlugin is intentionally NOT registered in adminhtml.
+
+        CustomerSessionPlugin handles two scenarios: a reference break (session active, _data empty)
+        and a lazy startup (session not active, cookie present). In the lazy startup path it calls
+        CustomerSession::start(), which runs initIniOptions() and session_start() with the FRONTEND
+        session config (session.cookie_path='/'). If this fires in the admin area it would start the
+        PHP session using frontend cookie config before the admin Auth\Session has a chance to start
+        it with the correct admin config, causing admin login's regenerateId() to send
+        Set-Cookie: PHPSESSID=<new_id>; Path='/' — overwriting the browser's frontend cookie.
+
+        Admin code does not generally need CustomerSession; the session accumulation fix
+        (SessionRegistry preference) already prevents startSessions() from pre-starting CustomerSession
+        in the admin area, so the lazy path can never fire for admin requests.
+    -->
+
+    <!--
+        Trigger a lazy Auth\Session start before isLoggedIn() is checked in FrankenPHP worker mode.
+
+        Our SessionRegistry subclass clears its WeakMap in _resetState(), so startSessions() no
+        longer pre-starts Auth\Session at the top of each request. Without a pre-start, Auth\Session
+        storage (_data) is empty when Authentication::aroundDispatch() calls isLoggedIn(), and the
+        admin appears logged out on every request even with a valid cookie.
+
+        Auth\Session::isLoggedIn() is an explicit public method, so the before plugin fires before
+        the logged-in check. start() loads _data from Redis via the existing session cookie.
+    -->
+    <type name="Magento\Backend\Model\Auth\Session">
+        <plugin name="reessolutions_worker_mode_admin_auth_session_lazy_start"
+                type="Reessolutions\WorkerMode\Plugin\Session\AdminAuthSessionPlugin"/>
+        <!--
+            Backstop for the case where start() failed silently in AdminAuthSessionPlugin
+            before setUser() was called in Auth::login().
+
+            AdminAuthSessionPlugin::beforeIsLoggedIn() calls start() before the isLoggedIn()
+            check, ensuring _data is bound before setUser() and processLogin() run. However,
+            if start() throws SessionException (validator rejects a stale cookie, area code
+            momentarily unavailable, etc.) the exception is caught silently and the session
+            is not started. setUser() then writes to orphaned _data. processLogin() calls
+            regenerateId() which calls session_start() + storage->init($_SESSION), overwriting
+            _data from Redis (no user), silently losing the user. The committed session has no
+            user; the next request redirects to login instead of TFA.
+
+            beforeProcessLogin() checks session_status() before processLogin() runs. If the
+            session is not active, it captures the pending user (already in _data from setUser),
+            calls start() to establish the reference, and re-writes the user so it enters
+            $_SESSION['admin'] before regenerateId() captures $oldSession.
+        -->
+        <plugin name="reessolutions_worker_mode_admin_auth_session_process_login"
+                type="Reessolutions\WorkerMode\Plugin\Session\AuthSessionProcessLoginPlugin"/>
+    </type>
+
+    <!--
+        Commit the admin session to Redis before the response is sent in FrankenPHP worker mode.
+
+        Without this, session_write_close() is only called in the resetState() finally block —
+        after sendResponse(). On admin login, Auth\Session is regenerated (new session ID),
+        the 302 redirect is sent to the browser, and the browser immediately follows it. A second
+        worker picks up the GET before the first worker's finally block has written the new session
+        to Redis, so Auth\Session.start() on the second worker finds an empty/missing session and
+        isLoggedIn() returns false, creating a redirect loop back to the login screen.
+
+        Calling closeSessions() in afterLaunch writes all active sessions to Redis and closes them
+        before sendResponse() fires. The session data is visible to all workers the moment the
+        browser receives the 302. The resetState() finally block's writeClose() is then a no-op
+        on the already-closed session.
+    -->
+    <type name="Opengento\Application\App\Http">
+        <plugin name="reessolutions_worker_mode_admin_session_commit"
+                type="Reessolutions\WorkerMode\Plugin\App\SessionCommitPlugin"
+                sortOrder="10000"/>
+    </type>
+</config>

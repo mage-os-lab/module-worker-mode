@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © Rees Solutions. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <!--
+        Fix for opengento/module-application empty REST responses on exceptions.
+
+        App\Http::handleHttpResult calls $result->getContent() before sendResponse() is
+        ever called on the REST response, so exceptions stored via setException() are never
+        rendered — producing a 200 OK with empty body. The plugin intercepts after launch()
+        and, when the response body is empty with a pending exception, returns the RestResponse
+        directly. AppBootstrap then calls sendResponse() on it, which calls _renderMessages()
+        first, producing a proper JSON error body with the correct HTTP status code.
+    -->
+    <!--
+        Repair CustomerSession storage in the webapi_rest area.
+        Same scenarios as the frontend fix (reference break + lazy startup). The webapi_rest
+        area has its own CustomerSession singleton, so the frontend plugin instance does not
+        cover REST requests. FrontendConfig is injected as sessionConfig here for the same
+        reason as on the frontend: AdminConfig contaminates global session_name()='admin',
+        and we need initIniOptions() to always reset it to 'PHPSESSID' before session_start().
+    -->
+    <type name="Magento\Customer\Model\Session">
+        <arguments>
+            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+        </arguments>
+        <plugin name="reessolutions_worker_mode_customer_session_repair"
+                type="Reessolutions\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin"/>
+    </type>
+    <type name="Reessolutions\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin">
+        <arguments>
+            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+        </arguments>
+    </type>
+
+    <!--
+        Ensure CheckoutSession._data is bound to $_SESSION before placeOrder() writes session fields.
+
+        QuoteManagement::placeOrderRun() loads the quote via quoteRepository->getActive($cartId),
+        not via checkoutSession->getQuote(). CheckoutSessionPlugin::aroundGetQuote() therefore
+        never fires during REST order placement, leaving CheckoutSession storage unbound.
+        setLastOrderId() and siblings write to orphaned _data; nothing reaches $_SESSION or Redis.
+        The frontend success page reads null for last_order_id and redirects to cart.
+
+        beforePlaceOrder() calls checkoutSession->start() before any session writes occur.
+        start() binds _data to $_SESSION['checkout'] and adds CheckoutSession to the WeakMap
+        so closeSessions() (in SessionCommitPlugin below) commits it to Redis before the
+        REST response is sent.
+
+        FrontendConfig is injected as sessionConfig for the same reason as CustomerSession:
+        if a previous admin request on this worker set session.name='admin' globally, and
+        checkoutSession->start() fires before CustomerSession->start() (e.g. for guest or
+        token-based auth), initIniOptions() must reset session.name='PHPSESSID' so
+        session_start() reads $_COOKIE['PHPSESSID'] not $_COOKIE['admin'].
+    -->
+    <type name="Magento\Checkout\Model\Session">
+        <arguments>
+            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Quote\Model\QuoteManagement">
+        <plugin name="reessolutions_worker_mode_checkout_session_before_place_order"
+                type="Reessolutions\WorkerMode\Plugin\Quote\Model\QuoteManagementPlugin"/>
+    </type>
+
+    <type name="Opengento\Application\App\Http">
+        <plugin name="reessolutions_worker_mode_rest_response_fallback"
+                type="Reessolutions\WorkerMode\Plugin\App\RestResponseFallbackPlugin"
+                sortOrder="100"/>
+        <!--
+            Commit all active sessions to Redis before the REST response is sent.
+
+            In multi-worker FrankenPHP, the REST order placement worker sets last_order_id in
+            the checkout session, but session_write_close() is only called in the finally block
+            — after sendResponse(). A frontend worker can start handling the checkout success
+            page GET before this write completes, reading Redis with no last_order_id, causing
+            Registration::validateAddresses() to receive orderId=0 and throw InputException.
+
+            closeSessions() writes to Redis immediately (making it visible to all workers) and
+            leaves the session closed. The resetState() finally block's writeClose() is then a
+            no-op on the already-closed session, so no stale data is written back.
+
+            Registered only in webapi_rest — frontend session handling must not be affected.
+        -->
+        <plugin name="reessolutions_worker_mode_session_commit"
+                type="Reessolutions\WorkerMode\Plugin\App\SessionCommitPlugin"
+                sortOrder="10000"/>
+    </type>
+</config>
