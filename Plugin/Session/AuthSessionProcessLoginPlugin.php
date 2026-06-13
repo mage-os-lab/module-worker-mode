@@ -37,8 +37,6 @@ use Magento\Framework\Exception\SessionException;
  */
 class AuthSessionProcessLoginPlugin
 {
-    public function __construct() {}
-
     /**
      * @param AuthSession $subject
      */

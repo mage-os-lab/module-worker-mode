@@ -16,8 +16,9 @@
         "assets": [],
         "groups": []
     },
-    "\\Hyva\\GraphqlTokens\\CustomerData\\CartPlugin": {
-        "quote": null
+    "\\Magento\\Framework\\View\\Design\\Theme\\FlyweightFactory": {
+        "themes": [],
+        "themesByPath": []
     },
     "\\Magento\\Webapi\\Controller\\Rest\\InputParamsResolver": {
         "route": null

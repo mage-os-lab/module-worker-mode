@@ -6,16 +6,6 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!--
-        Fix for opengento/module-application empty REST responses on exceptions.
-
-        App\Http::handleHttpResult calls $result->getContent() before sendResponse() is
-        ever called on the REST response, so exceptions stored via setException() are never
-        rendered — producing a 200 OK with empty body. The plugin intercepts after launch()
-        and, when the response body is empty with a pending exception, returns the RestResponse
-        directly. AppBootstrap then calls sendResponse() on it, which calls _renderMessages()
-        first, producing a proper JSON error body with the correct HTTP status code.
-    -->
-    <!--
         Repair CustomerSession storage in the webapi_rest area.
         Same scenarios as the frontend fix (reference break + lazy startup). The webapi_rest
         area has its own CustomerSession singleton, so the frontend plugin instance does not
@@ -67,6 +57,16 @@
     </type>
 
     <type name="Opengento\Application\App\Http">
+        <!--
+            Fix opengento/module-application empty REST responses when a service throws.
+
+            App\Http::handleHttpResult calls $result->getContent() before sendResponse() is
+            ever called on the REST response, so exceptions stored via setException() are never
+            rendered — producing a 200 OK with empty body. The plugin intercepts after launch()
+            and, when the response body is empty with a pending exception, returns the RestResponse
+            directly. AppBootstrap then calls sendResponse() on it, which calls _renderMessages()
+            first, producing a proper JSON error body with the correct HTTP status code.
+        -->
         <plugin name="reessolutions_worker_mode_rest_response_fallback"
                 type="Reessolutions\WorkerMode\Plugin\App\RestResponseFallbackPlugin"
                 sortOrder="100"/>

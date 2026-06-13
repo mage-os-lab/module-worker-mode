@@ -3,6 +3,7 @@
     <module name="Reessolutions_WorkerMode">
         <sequence>
             <module name="Opengento_Application"/>
+            <module name="Magento_TwoFactorAuth"/>
         </sequence>
     </module>
 </config>

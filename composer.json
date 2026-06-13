@@ -4,7 +4,7 @@
     "type": "magento2-module",
     "version": "1.0.0",
     "minimum-stability": "stable",
-    "license": "proprietary",
+    "license": "OSL-3.0",
     "authors": [
         {
             "name": "Mark Rees",
@@ -19,7 +19,11 @@
     "require": {
         "php": "~8.0.0 || ~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
         "opengento/magento2-frankenphp-base": "^0.9.4",
-        "opengento/module-application": "*"
+        "opengento/module-application": "*",
+        "magento/module-two-factor-auth": "*"
+    },
+    "suggest": {
+        "reessolutions/module-worker-mode-hyva": "Provides support for Hyva Theme & Worker Mode"
     },
     "autoload": {
         "files": [

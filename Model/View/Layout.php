@@ -84,6 +84,7 @@ class Layout extends \Magento\Framework\View\Layout implements ResetAfterRequest
     public function _resetState(): void
     {
         $this->isCacheableCache = null;
+        $this->cacheable = true;
         $this->_xml = null;
         $this->_update = null;
         $this->_blocks = [];

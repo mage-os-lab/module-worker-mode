@@ -40,10 +40,10 @@ Each area (`global`, `frontend`, `adminhtml`, `webapi_rest`) loads a separate DI
 
 ```
 etc/
-  module.xml              — sequence: Opengento_Application, Reessolutions_Base
+  module.xml              — sequence: Opengento_Application, Magento_TwoFactorAuth
   reset.json              — reset.json entries for third-party singletons we cannot subclass
   di.xml                  — global: preferences (Layout, Design, Page\Config, Area,
-                            SessionRegistry, HyvaCsp), isIsolated=false, OM context plugin,
+                            SessionRegistry), isIsolated=false, OM context plugin,
                             FrontendConfig scopeType
   adminhtml/di.xml        — Widget\Context preference, AdminAuthSession plugins,
                             SessionCommitPlugin (admin 302 race fix)
@@ -118,11 +118,9 @@ Session/
 View/Page/
   Config.php                      — ResetAfterRequestInterface subclass; fixes PHP 8.4 lazy ghost
                                     failure for elements, pageLayout, includes, metadata
-
-ViewModel/
-  HyvaCsp.php                     — ResetAfterRequestInterface subclass; clears memoizedPolicies
-                                    and memoizedAreaCode via reflection (private parent props)
 ```
+
+Hyvä-specific classes live in the companion module `Reessolutions_WorkerModeHyva` (see below).
 
 ---
 
@@ -137,13 +135,29 @@ The `etc/reset.json` in this module covers classes we cannot subclass:
 | `DynamicCollector` | `added` | CSP directives accumulate |
 | `Magento\Theme\Model\View\Design` | `_area`, `_theme` | Fallback; our subclass is the real fix |
 | `GroupedCollection` | `assets`, `groups` | Asset collection carries previous page's assets |
-| `Hyva\GraphqlTokens\CustomerData\CartPlugin` | `quote` | Stale quote reference |
+| `FlyweightFactory` | `themes`, `themesByPath` | Theme cache grows unbounded; has only a Proxy (not a lazy ghost), so reflection reset works |
 | `Rest\InputParamsResolver` | `route` | Stale route from prior REST request |
 | `Template\File\Resolver` | `_templateFilesMap` | Template resolution cache |
 | `Page\Layout\Reader` | `pageLayoutMerge` | Stale merged page layout |
 | `ScheduledStructure` | all fields | Layout build artifacts |
 
 Note: the `Design` entry is a fallback. Our `Model/View/Design` subclass handles the real reset via `ResetAfterRequestInterface`. The `reset.json` entry remains for defence-in-depth.
+
+---
+
+## Companion module: Reessolutions_WorkerModeHyva
+
+Hyvä-specific resets live in `reessolutions/module-worker-mode-hyva` (`WorkerModeHyva/` sibling directory). That module sequences after both `Reessolutions_WorkerMode` and `Hyva_Theme`, so it only compiles on Hyvä stores. A Luma store installs only the base module; `setup:di:compile` never touches the Hyvä classes.
+
+What the companion module owns:
+
+| File | Purpose |
+| --- | --- |
+| `ViewModel/HyvaCsp.php` | `ResetAfterRequestInterface` subclass; clears `memoizedPolicies` and `memoizedAreaCode` via reflection (private parent props) |
+| `etc/di.xml` | `<preference for="Hyva\Theme\ViewModel\HyvaCsp">` pointing to the subclass above |
+| `etc/reset.json` | `\Hyva\GraphqlTokens\CustomerData\CartPlugin` — stale quote reference |
+
+**Note on ProductListItem (`OutOfBoundsException`):** this base module's `isIsolated=false` setting on `Page` and `Layout` result types already prevents the shared-singleton/isolated-layout mismatch that causes this exception. No `ProductListItem` ViewModel override is needed in the companion module.
 
 ---
 
