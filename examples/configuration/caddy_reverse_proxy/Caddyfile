@@ -1,0 +1,65 @@
+# =============================================================================
+# Caddyfile — Mage-OS
+# Caddy obtains and renews Let's Encrypt certificates automatically.
+# All HTTP traffic is redirected to HTTPS (Caddy does this by default).
+# HTTPS traffic is proxied to Varnish, which proxies cache misses to the app.
+# =============================================================================
+
+{
+    # Global options
+    email {$CADDY_ACME_EMAIL}          # Let's Encrypt account email — required
+    admin off                           # Disable Caddy admin API (not needed)
+}
+
+{$CADDY_DOMAIN} {
+
+    # ------------------------------------------------------------------
+    # TLS — Let's Encrypt via ACME HTTP-01 challenge
+    # Caddy handles certificate issuance and renewal automatically.
+    # No extra config needed unless you need DNS-01 (wildcard certs).
+    # ------------------------------------------------------------------
+    tls {$CADDY_ACME_EMAIL}
+
+    # ------------------------------------------------------------------
+    # Proxy to Varnish
+    # Caddy terminates TLS then forwards plain HTTP to Varnish on :80.
+    # The X-Forwarded-Proto header tells Mage-OS the original request
+    # was HTTPS — required for correct URL generation and secure cookies.
+    # X-Real-IP passes the real visitor IP through for logging and any
+    # geo/rate-limit logic.
+    # ------------------------------------------------------------------
+    reverse_proxy varnish:80 {
+        header_up X-Forwarded-Proto https
+        header_up X-Real-IP {remote_host}
+        header_up Host {host}
+
+        # Health check — Caddy will stop sending to Varnish if it goes down
+        health_uri /health_check.php
+        health_interval 30s
+        health_timeout 5s
+    }
+
+    # ------------------------------------------------------------------
+    # Security headers
+    # Varnish/Magento don't set these — Caddy is the right place for them.
+    # ------------------------------------------------------------------
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+        X-Frame-Options SAMEORIGIN
+        Referrer-Policy strict-origin-when-cross-origin
+        # Remove Caddy's server header
+        -Server
+    }
+
+    # ------------------------------------------------------------------
+    # Logging
+    # ------------------------------------------------------------------
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+    }
+}

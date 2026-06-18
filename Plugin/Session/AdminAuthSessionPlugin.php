@@ -1,10 +1,7 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Session;
+namespace MageOS\WorkerMode\Plugin\Session;
 
 use Magento\Backend\Model\Auth\Session as AuthSession;
 use Magento\Backend\Model\Session as BackendSession;
@@ -12,6 +9,7 @@ use Magento\Framework\Exception\SessionException;
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 use Magento\TwoFactorAuth\Api\TfaSessionInterface;
 
+/**
 /**
  * Starts Auth\Session, Backend\Model\Session, and TfaSession before isLoggedIn()
  * is checked in FrankenPHP worker mode.

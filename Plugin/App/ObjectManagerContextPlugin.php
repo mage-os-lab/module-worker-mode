@@ -1,15 +1,13 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\App;
+namespace MageOS\WorkerMode\Plugin\App;
 
 use Magento\Framework\App\ObjectManager as FrameworkObjectManager;
 use Magento\Framework\ObjectManagerInterface;
 use Opengento\Application\App\Http;
 
+/**
 /**
  * Restores the correct area ObjectManager as ObjectManager::getInstance() target before each request.
  *

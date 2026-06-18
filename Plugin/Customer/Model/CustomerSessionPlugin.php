@@ -1,16 +1,14 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Customer\Model;
+namespace MageOS\WorkerMode\Plugin\Customer\Model;
 
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Exception\SessionException;
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 use Magento\Framework\Session\Config\ConfigInterface as SessionConfigInterface;
 
+/**
 /**
  * Repairs CustomerSession storage in two worker-mode scenarios.
  *
@@ -44,7 +42,7 @@ class CustomerSessionPlugin implements ResetAfterRequestInterface
 
     /**
      * @param SessionConfigInterface $sessionConfig Customer session config; must be
-     *   Reessolutions\WorkerMode\Session\FrontendConfig (or any config that stores session.name
+     *   MageOS\WorkerMode\Session\FrontendConfig (or any config that stores session.name
      *   in $options) so getName() returns the correct cookie name regardless of global
      *   PHP session_name() state contaminated by previous admin requests on this worker.
      */

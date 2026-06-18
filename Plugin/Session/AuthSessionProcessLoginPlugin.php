@@ -1,14 +1,12 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Session;
+namespace MageOS\WorkerMode\Plugin\Session;
 
 use Magento\Backend\Model\Auth\Session as AuthSession;
 use Magento\Framework\Exception\SessionException;
 
+/**
 /**
  * Ensures Auth\Session is started and user is in $_SESSION before regenerateId() runs.
  *

@@ -1,13 +1,11 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Model\App;
+namespace MageOS\WorkerMode\Model\App;
 
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 
+/**
 /**
  * Clears the design-loaded flag between FrankenPHP worker requests.
  *

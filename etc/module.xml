@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="Reessolutions_WorkerMode">
+    <module name="MageOS_WorkerMode">
         <sequence>
             <module name="Opengento_Application"/>
             <module name="Magento_TwoFactorAuth"/>

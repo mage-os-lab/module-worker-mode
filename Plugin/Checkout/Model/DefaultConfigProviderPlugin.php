@@ -1,10 +1,7 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Checkout\Model;
+namespace MageOS\WorkerMode\Plugin\Checkout\Model;
 
 use Magento\Checkout\Model\DefaultConfigProvider;
 use Magento\Checkout\Model\Session as CheckoutSession;
@@ -13,6 +10,7 @@ use Magento\Framework\DB\Adapter\LockWaitException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\SessionException;
 
+/**
 /**
  * Handles two failure modes for DefaultConfigProvider::getConfig() in FrankenPHP worker mode.
  *

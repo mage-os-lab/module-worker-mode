@@ -1,4 +1,4 @@
-# CLAUDE.md — Reessolutions_WorkerMode
+# CLAUDE.md — MageOS_WorkerMode
 
 This module makes Magento/MageOS run correctly under FrankenPHP worker mode. Every class here exists to fix a specific category of state-leakage bug. Before touching anything, understand the three mechanisms below.
 
@@ -120,7 +120,7 @@ View/Page/
                                     failure for elements, pageLayout, includes, metadata
 ```
 
-Hyvä-specific classes live in the companion module `Reessolutions_WorkerModeHyva` (see below).
+Hyvä-specific classes live in the companion module `MageOS_WorkerModeHyva` (see below).
 
 ---
 
@@ -145,9 +145,9 @@ Note: the `Design` entry is a fallback. Our `Model/View/Design` subclass handles
 
 ---
 
-## Companion module: Reessolutions_WorkerModeHyva
+## Companion module: MageOS_WorkerModeHyva
 
-Hyvä-specific resets live in `reessolutions/module-worker-mode-hyva` (`WorkerModeHyva/` sibling directory). That module sequences after both `Reessolutions_WorkerMode` and `Hyva_Theme`, so it only compiles on Hyvä stores. A Luma store installs only the base module; `setup:di:compile` never touches the Hyvä classes.
+Hyvä-specific resets live in `mage-os/module-worker-mode-hyva` (`WorkerModeHyva/` sibling directory). That module sequences after both `MageOS_WorkerMode` and `Hyva_Theme`, so it only compiles on Hyvä stores. A Luma store installs only the base module; `setup:di:compile` never touches the Hyvä classes.
 
 What the companion module owns:
 
@@ -163,7 +163,7 @@ What the companion module owns:
 
 ## Common mistakes to avoid
 
-**Do not** move worker-mode fixes back into `Reessolutions_Base`. Base is generic; this module owns all opengento/FrankenPHP concerns.
+**Do not** move worker-mode fixes out of `MageOS_WorkerMode` into other modules. This module owns all opengento/FrankenPHP concerns.
 
 **Do not** register `SessionCommitPlugin` globally in `etc/di.xml`. It must be area-scoped (`adminhtml` and `webapi_rest` only). Global registration runs `closeSessions()` after every frontend response, closing the frontend session before Magento's own session lifecycle has finished.
 

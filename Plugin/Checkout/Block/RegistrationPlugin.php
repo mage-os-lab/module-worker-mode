@@ -1,14 +1,12 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Checkout\Block;
+namespace MageOS\WorkerMode\Plugin\Checkout\Block;
 
 use Magento\Checkout\Block\Registration;
 use Magento\Framework\Exception\InputException;
 
+/**
 /**
  * Guards the Registration block against a missing last_order_id in the checkout session.
  *

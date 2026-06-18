@@ -1,15 +1,13 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\App;
+namespace MageOS\WorkerMode\Plugin\App;
 
 use Magento\Framework\App\Response\HttpInterface;
 use Opengento\Application\App\Http;
 use Opengento\Application\App\Session\SessionRegistry;
 
+/**
 /**
  * Commits all active sessions to Redis before the response is sent.
  *

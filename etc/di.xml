@@ -1,9 +1,4 @@
 <?xml version="1.0"?>
-<!--
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!--
         Prefer our Page\Config subclass so the Resetter calls _resetState() directly.
@@ -13,10 +8,10 @@
         initializer and overwriting the reset. Our subclass implements ResetAfterRequestInterface so
         the Resetter calls _resetState() as a method — which initializes the ghost first and then
         writes into the live property slot that running code actually uses.
-        See: Reessolutions\WorkerMode\View\Page\Config for the full explanation.
+        See: MageOS\WorkerMode\View\Page\Config for the full explanation.
     -->
     <preference for="Magento\Framework\View\Page\Config"
-                type="Reessolutions\WorkerMode\View\Page\Config"/>
+                type="MageOS\WorkerMode\View\Page\Config"/>
 
     <!--
         Prefer our Design subclass so the Resetter calls _resetState() directly.
@@ -28,7 +23,7 @@
         webapi_rest area CSS URLs and a blank body.
     -->
     <preference for="Magento\Theme\Model\View\Design"
-                type="Reessolutions\WorkerMode\Model\View\Design"/>
+                type="MageOS\WorkerMode\Model\View\Design"/>
 
     <!--
         Plugin on Page\Config::getElementAttributes() to ensure html.lang is always present.
@@ -37,8 +32,8 @@
         (ElasticSuite price slider).
     -->
     <type name="Magento\Framework\View\Page\Config">
-        <plugin name="reessolutions_worker_mode_html_lang_attribute"
-                type="Reessolutions\WorkerMode\Plugin\View\Page\ConfigPlugin"/>
+        <plugin name="mage_os_worker_mode_html_lang_attribute"
+                type="MageOS\WorkerMode\Plugin\View\Page\ConfigPlugin"/>
     </type>
 
     <!--
@@ -50,7 +45,7 @@
         isCacheable() to incorrectly treat the checkout success page as cacheable.
     -->
     <preference for="Magento\Framework\View\Layout"
-                type="Reessolutions\WorkerMode\Model\View\Layout"/>
+                type="MageOS\WorkerMode\Model\View\Layout"/>
 
     <!--
         The opengento/module-application worker package sets isIsolated=true on Page and Layout result
@@ -84,7 +79,7 @@
         subclass clears the WeakMap in _resetState(); sessions are lazily started as normal instead.
     -->
     <preference for="Opengento\Application\App\Session\SessionRegistry"
-                type="Reessolutions\WorkerMode\App\Session\SessionRegistry"/>
+                type="MageOS\WorkerMode\App\Session\SessionRegistry"/>
 
     <!--
         FrontendConfig requires a scopeType so _scopeConfig->getValue() uses 'default' scope for
@@ -92,7 +87,7 @@
         Magento\Framework\Session\Config which is globally configured with SCOPE_TYPE_DEFAULT
         in magento2-base app/etc/di.xml.
     -->
-    <type name="Reessolutions\WorkerMode\Session\FrontendConfig">
+    <type name="MageOS\WorkerMode\Session\FrontendConfig">
         <arguments>
             <argument name="scopeType" xsi:type="const">Magento\Framework\App\Config\ScopeConfigInterface::SCOPE_TYPE_DEFAULT</argument>
         </arguments>
@@ -109,8 +104,8 @@
         the scope-specific plugin chain runs, restoring correct getInstance() behaviour for the request.
     -->
     <type name="Opengento\Application\App\Http">
-        <plugin name="reessolutions_worker_mode_om_context"
-                type="Reessolutions\WorkerMode\Plugin\App\ObjectManagerContextPlugin"
+        <plugin name="mage_os_worker_mode_om_context"
+                type="MageOS\WorkerMode\Plugin\App\ObjectManagerContextPlugin"
                 sortOrder="1"/>
     </type>
 
@@ -123,6 +118,6 @@
         correct theme so asset URLs use the right area/theme path instead of '_view'.
     -->
     <preference for="Magento\Framework\App\Area"
-                type="Reessolutions\WorkerMode\Model\App\Area"/>
+                type="MageOS\WorkerMode\Model\App\Area"/>
 
 </config>

@@ -1,16 +1,14 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Checkout\Model\Session;
+namespace MageOS\WorkerMode\Plugin\Checkout\Model\Session;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Checkout\Model\Session\SuccessValidator;
 use Magento\Framework\Exception\SessionException;
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 
+/**
 /**
  * Starts CheckoutSession before SuccessValidator::isValid() reads magic-method data.
  *

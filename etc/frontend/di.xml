@@ -1,9 +1,4 @@
 <?xml version="1.0"?>
-<!--
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!--
         Repair CustomerSession storage in FrankenPHP worker mode.
@@ -28,14 +23,14 @@
     -->
     <type name="Magento\Customer\Model\Session">
         <arguments>
-            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+            <argument name="sessionConfig" xsi:type="object">MageOS\WorkerMode\Session\FrontendConfig</argument>
         </arguments>
-        <plugin name="reessolutions_worker_mode_customer_session_repair"
-                type="Reessolutions\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin"/>
+        <plugin name="mage_os_worker_mode_customer_session_repair"
+                type="MageOS\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin"/>
     </type>
-    <type name="Reessolutions\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin">
+    <type name="MageOS\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin">
         <arguments>
-            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+            <argument name="sessionConfig" xsi:type="object">MageOS\WorkerMode\Session\FrontendConfig</argument>
         </arguments>
     </type>
 
@@ -46,8 +41,8 @@
         The plugin catches that exception and returns '' so the block is silently hidden.
     -->
     <type name="Magento\Checkout\Block\Registration">
-        <plugin name="reessolutions_worker_mode_checkout_registration_guard"
-                type="Reessolutions\WorkerMode\Plugin\Checkout\Block\RegistrationPlugin"/>
+        <plugin name="mage_os_worker_mode_checkout_registration_guard"
+                type="MageOS\WorkerMode\Plugin\Checkout\Block\RegistrationPlugin"/>
     </type>
 
     <!--
@@ -59,8 +54,8 @@
         CONTEXT_AUTH is never altered — manipulating it mid-render causes Hyvä reload loops.
     -->
     <type name="Magento\Checkout\Model\DefaultConfigProvider">
-        <plugin name="reessolutions_worker_mode_checkout_config_session_guard"
-                type="Reessolutions\WorkerMode\Plugin\Checkout\Model\DefaultConfigProviderPlugin"/>
+        <plugin name="mage_os_worker_mode_checkout_config_session_guard"
+                type="MageOS\WorkerMode\Plugin\Checkout\Model\DefaultConfigProviderPlugin"/>
     </type>
 
     <!--
@@ -74,8 +69,8 @@
         that CheckoutSession storage is populated from Redis before getQuoteId() is read.
     -->
     <type name="Magento\Checkout\Model\Session">
-        <plugin name="reessolutions_worker_mode_checkout_session_lock_wait_guard"
-                type="Reessolutions\WorkerMode\Plugin\Checkout\Model\CheckoutSessionPlugin"/>
+        <plugin name="mage_os_worker_mode_checkout_session_lock_wait_guard"
+                type="MageOS\WorkerMode\Plugin\Checkout\Model\CheckoutSessionPlugin"/>
     </type>
 
     <!--
@@ -89,8 +84,8 @@
         and restores them after, scoped to checkout_onepage_success only.
     -->
     <type name="Magento\Checkout\Model\Session">
-        <plugin name="reessolutions_worker_mode_checkout_preserve_order_data"
-                type="Reessolutions\WorkerMode\Plugin\Checkout\Model\Session\PreserveOrderDataPlugin"/>
+        <plugin name="mage_os_worker_mode_checkout_preserve_order_data"
+                type="MageOS\WorkerMode\Plugin\Checkout\Model\Session\PreserveOrderDataPlugin"/>
     </type>
 
     <!--
@@ -105,7 +100,7 @@
         (explicit public method) and start the session in the before interceptor.
     -->
     <type name="Magento\Checkout\Model\Session\SuccessValidator">
-        <plugin name="reessolutions_worker_mode_checkout_success_session_start"
-                type="Reessolutions\WorkerMode\Plugin\Checkout\Model\Session\SuccessValidatorPlugin"/>
+        <plugin name="mage_os_worker_mode_checkout_success_session_start"
+                type="MageOS\WorkerMode\Plugin\Checkout\Model\Session\SuccessValidatorPlugin"/>
     </type>
 </config>

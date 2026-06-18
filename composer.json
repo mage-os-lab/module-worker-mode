@@ -1,6 +1,6 @@
 {
-    "name": "reessolutions/module-worker-mode",
-    "description": "FrankenPHP worker-mode compatibility fixes for Reessolutions projects",
+    "name": "mage-os/module-worker-mode",
+    "description": "FrankenPHP worker-mode compatibility fixes for MageOS/Magento",
     "type": "magento2-module",
     "version": "1.0.0",
     "minimum-stability": "stable",
@@ -23,14 +23,14 @@
         "magento/module-two-factor-auth": "*"
     },
     "suggest": {
-        "reessolutions/module-worker-mode-hyva": "Provides support for Hyva Theme & Worker Mode"
+        "mage-os/module-worker-mode-hyva": "Provides support for Hyva Theme & Worker Mode"
     },
     "autoload": {
         "files": [
             "registration.php"
         ],
         "psr-4": {
-            "Reessolutions\\WorkerMode\\": ""
+            "MageOS\\WorkerMode\\": ""
         }
     }
 }

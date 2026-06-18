@@ -1,15 +1,13 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\App;
+namespace MageOS\WorkerMode\Plugin\App;
 
 use Magento\Framework\App\Response\HttpInterface;
 use Magento\Framework\Webapi\Rest\Response as RestResponse;
 use Opengento\Application\App\Http;
 
+/**
 /**
  * Fixes opengento/module-application empty REST responses when a service call throws.
  *

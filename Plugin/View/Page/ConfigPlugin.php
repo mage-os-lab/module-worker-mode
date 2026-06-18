@@ -1,14 +1,12 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\View\Page;
+namespace MageOS\WorkerMode\Plugin\View\Page;
 
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\View\Page\Config;
 
+/**
 /**
  * Ensures the HTML lang attribute is present on every request.
  *

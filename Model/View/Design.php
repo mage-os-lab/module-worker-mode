@@ -1,13 +1,11 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Model\View;
+namespace MageOS\WorkerMode\Model\View;
 
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 
+/**
 /**
  * Ensures Design._area and _theme are reset between FrankenPHP worker requests.
  *

@@ -1,10 +1,7 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Session;
+namespace MageOS\WorkerMode\Session;
 
 use Magento\Framework\App\DeploymentConfig;
 use Magento\Framework\App\Config\ScopeConfigInterface;
@@ -14,6 +11,7 @@ use Magento\Framework\Session\Config;
 use Magento\Framework\Stdlib\StringUtils;
 use Magento\Framework\ValidatorFactory;
 
+/**
 /**
  * Session config for the frontend area that stores session.name explicitly in $options.
  *

@@ -1,16 +1,14 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\App\Session;
+namespace MageOS\WorkerMode\App\Session;
 
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 use Magento\Framework\Session\SessionManagerInterface;
 use Opengento\Application\App\Session\SessionRegistry as BaseSessionRegistry;
 use WeakMap;
 
+/**
 /**
  * Resets the session registry between requests so each request only manages its own sessions.
  *

@@ -1,15 +1,13 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Quote\Model;
+namespace MageOS\WorkerMode\Plugin\Quote\Model;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\Exception\SessionException;
 use Magento\Quote\Model\QuoteManagement;
 
+/**
 /**
  * Ensures CheckoutSession is started before placeOrder writes session data in FrankenPHP worker mode.
  *

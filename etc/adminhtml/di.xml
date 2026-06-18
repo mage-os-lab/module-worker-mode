@@ -1,9 +1,4 @@
 <?xml version="1.0"?>
-<!--
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!--
         Reset the admin ButtonList between requests in FrankenPHP worker mode.
@@ -18,7 +13,7 @@
         _buttons back to the initial [-1=>[], 0=>[], 1=>[]] structure after each request.
     -->
     <preference for="Magento\Backend\Block\Widget\Context"
-                type="Reessolutions\WorkerMode\Block\Backend\Widget\Context"/>
+                type="MageOS\WorkerMode\Block\Backend\Widget\Context"/>
 
     <!--
         CustomerSessionPlugin is intentionally NOT registered in adminhtml.
@@ -48,8 +43,8 @@
         the logged-in check. start() loads _data from Redis via the existing session cookie.
     -->
     <type name="Magento\Backend\Model\Auth\Session">
-        <plugin name="reessolutions_worker_mode_admin_auth_session_lazy_start"
-                type="Reessolutions\WorkerMode\Plugin\Session\AdminAuthSessionPlugin"/>
+        <plugin name="mage_os_worker_mode_admin_auth_session_lazy_start"
+                type="MageOS\WorkerMode\Plugin\Session\AdminAuthSessionPlugin"/>
         <!--
             Backstop for the case where start() failed silently in AdminAuthSessionPlugin
             before setUser() was called in Auth::login().
@@ -68,8 +63,8 @@
             calls start() to establish the reference, and re-writes the user so it enters
             $_SESSION['admin'] before regenerateId() captures $oldSession.
         -->
-        <plugin name="reessolutions_worker_mode_admin_auth_session_process_login"
-                type="Reessolutions\WorkerMode\Plugin\Session\AuthSessionProcessLoginPlugin"/>
+        <plugin name="mage_os_worker_mode_admin_auth_session_process_login"
+                type="MageOS\WorkerMode\Plugin\Session\AuthSessionProcessLoginPlugin"/>
     </type>
 
     <!--
@@ -88,8 +83,8 @@
         on the already-closed session.
     -->
     <type name="Opengento\Application\App\Http">
-        <plugin name="reessolutions_worker_mode_admin_session_commit"
-                type="Reessolutions\WorkerMode\Plugin\App\SessionCommitPlugin"
+        <plugin name="mage_os_worker_mode_admin_session_commit"
+                type="MageOS\WorkerMode\Plugin\App\SessionCommitPlugin"
                 sortOrder="10000"/>
     </type>
 </config>

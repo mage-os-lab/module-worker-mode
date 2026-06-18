@@ -1,9 +1,4 @@
 <?xml version="1.0"?>
-<!--
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <!--
         Repair CustomerSession storage in the webapi_rest area.
@@ -15,14 +10,14 @@
     -->
     <type name="Magento\Customer\Model\Session">
         <arguments>
-            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+            <argument name="sessionConfig" xsi:type="object">MageOS\WorkerMode\Session\FrontendConfig</argument>
         </arguments>
-        <plugin name="reessolutions_worker_mode_customer_session_repair"
-                type="Reessolutions\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin"/>
+        <plugin name="mage_os_worker_mode_customer_session_repair"
+                type="MageOS\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin"/>
     </type>
-    <type name="Reessolutions\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin">
+    <type name="MageOS\WorkerMode\Plugin\Customer\Model\CustomerSessionPlugin">
         <arguments>
-            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+            <argument name="sessionConfig" xsi:type="object">MageOS\WorkerMode\Session\FrontendConfig</argument>
         </arguments>
     </type>
 
@@ -48,12 +43,12 @@
     -->
     <type name="Magento\Checkout\Model\Session">
         <arguments>
-            <argument name="sessionConfig" xsi:type="object">Reessolutions\WorkerMode\Session\FrontendConfig</argument>
+            <argument name="sessionConfig" xsi:type="object">MageOS\WorkerMode\Session\FrontendConfig</argument>
         </arguments>
     </type>
     <type name="Magento\Quote\Model\QuoteManagement">
-        <plugin name="reessolutions_worker_mode_checkout_session_before_place_order"
-                type="Reessolutions\WorkerMode\Plugin\Quote\Model\QuoteManagementPlugin"/>
+        <plugin name="mage_os_worker_mode_checkout_session_before_place_order"
+                type="MageOS\WorkerMode\Plugin\Quote\Model\QuoteManagementPlugin"/>
     </type>
 
     <type name="Opengento\Application\App\Http">
@@ -67,8 +62,8 @@
             directly. AppBootstrap then calls sendResponse() on it, which calls _renderMessages()
             first, producing a proper JSON error body with the correct HTTP status code.
         -->
-        <plugin name="reessolutions_worker_mode_rest_response_fallback"
-                type="Reessolutions\WorkerMode\Plugin\App\RestResponseFallbackPlugin"
+        <plugin name="mage_os_worker_mode_rest_response_fallback"
+                type="MageOS\WorkerMode\Plugin\App\RestResponseFallbackPlugin"
                 sortOrder="100"/>
         <!--
             Commit all active sessions to Redis before the REST response is sent.
@@ -85,8 +80,8 @@
 
             Registered only in webapi_rest — frontend session handling must not be affected.
         -->
-        <plugin name="reessolutions_worker_mode_session_commit"
-                type="Reessolutions\WorkerMode\Plugin\App\SessionCommitPlugin"
+        <plugin name="mage_os_worker_mode_session_commit"
+                type="MageOS\WorkerMode\Plugin\App\SessionCommitPlugin"
                 sortOrder="10000"/>
     </type>
 </config>

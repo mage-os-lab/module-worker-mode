@@ -1,16 +1,14 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Checkout\Model;
+namespace MageOS\WorkerMode\Plugin\Checkout\Model;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\DB\Adapter\LockWaitException;
 use Magento\Framework\Exception\SessionException;
 use Magento\Quote\Api\Data\CartInterface;
 
+/**
 /**
  * Covers all callers of CheckoutSession::getQuote() for LockWaitException in FrankenPHP worker mode.
  *

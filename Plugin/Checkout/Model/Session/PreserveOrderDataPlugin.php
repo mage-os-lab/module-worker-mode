@@ -1,14 +1,12 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Plugin\Checkout\Model\Session;
+namespace MageOS\WorkerMode\Plugin\Checkout\Model\Session;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\App\Request\Http as HttpRequest;
 
+/**
 /**
  * Preserves order-completion session data across the depersonalize-triggered clearStorage() call.
  *

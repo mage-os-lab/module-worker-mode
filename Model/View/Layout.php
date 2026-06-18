@@ -1,14 +1,12 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Model\View;
+namespace MageOS\WorkerMode\Model\View;
 
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 use Magento\Framework\View\Layout\Element as LayoutElement;
 
+/**
 /**
  * Extends the core Layout with FrankenPHP worker-mode state reset.
  *

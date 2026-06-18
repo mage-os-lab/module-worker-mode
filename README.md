@@ -1,4 +1,4 @@
-# Reessolutions_WorkerMode
+# MageOS_WorkerMode
 
 Makes Magento / MageOS run correctly under **FrankenPHP worker mode**, where a single PHP process handles many requests in sequence without restarting between them.
 

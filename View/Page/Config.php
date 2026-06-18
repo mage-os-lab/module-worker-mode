@@ -1,13 +1,11 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\View\Page;
+namespace MageOS\WorkerMode\View\Page;
 
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 
+/**
 /**
  * Ensures Page\Config state is reset between FrankenPHP worker requests.
  *

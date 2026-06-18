@@ -1,16 +1,14 @@
 <?php
-/**
- * Copyright © Rees Solutions. All rights reserved.
- */
 declare(strict_types=1);
 
-namespace Reessolutions\WorkerMode\Block\Backend\Widget;
+namespace MageOS\WorkerMode\Block\Backend\Widget;
 
 use Magento\Backend\Block\Widget\Button\ButtonList;
 use Magento\Backend\Block\Widget\Context as BaseContext;
 use Magento\Framework\ObjectManager\ResetAfterRequestInterface;
 use ReflectionProperty;
 
+/**
 /**
  * Resets ButtonList._buttons between requests in FrankenPHP worker mode.
  *
