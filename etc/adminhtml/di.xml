@@ -99,4 +99,9 @@
                 type="MageOS\WorkerMode\Plugin\App\SessionCommitPlugin"
                 sortOrder="10000"/>
     </type>
+
+    <type name="Magento\Framework\Message\Manager">
+        <plugin name="mage_os_worker_mode_message_session_start"
+                type="MageOS\WorkerMode\Plugin\Message\MessageManagerSessionPlugin"/>
+    </type>
 </config>
