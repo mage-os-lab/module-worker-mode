@@ -4,6 +4,7 @@
         <sequence>
             <module name="Opengento_Application"/>
             <module name="Magento_TwoFactorAuth"/>
+            <module name="Magento_Security"/>
         </sequence>
     </module>
 </config>

@@ -16,6 +16,18 @@
                 type="MageOS\WorkerMode\Block\Backend\Widget\Context"/>
 
     <!--
+        Reset Magento_Security's cached admin session record between requests in worker mode.
+
+        AdminSessionsManager is a singleton; getCurrentSession() caches the admin_user_session
+        row in $currentSession and never clears it. Plugin\AuthSession::aroundProlong() destroys
+        any session whose cached row is not isLoggedInStatus(). After a logout sets that row to
+        LOGGED_OUT, a warm worker keeps the stale row and destroys the next login on that worker,
+        bouncing the admin back to the login screen. Our subclass nulls the cache in _resetState().
+    -->
+    <preference for="Magento\Security\Model\AdminSessionsManager"
+                type="MageOS\WorkerMode\Model\Security\AdminSessionsManager"/>
+
+    <!--
         CustomerSessionPlugin is intentionally NOT registered in adminhtml.
 
         CustomerSessionPlugin handles two scenarios: a reference break (session active, _data empty)
@@ -86,5 +98,10 @@
         <plugin name="mage_os_worker_mode_admin_session_commit"
                 type="MageOS\WorkerMode\Plugin\App\SessionCommitPlugin"
                 sortOrder="10000"/>
+    </type>
+
+    <type name="Magento\Framework\Message\Manager">
+        <plugin name="mage_os_worker_mode_message_session_start"
+                type="MageOS\WorkerMode\Plugin\Message\MessageManagerSessionPlugin"/>
     </type>
 </config>
