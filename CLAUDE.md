@@ -40,13 +40,15 @@ Each area (`global`, `frontend`, `adminhtml`, `webapi_rest`) loads a separate DI
 
 ```
 etc/
-  module.xml              — sequence: Opengento_Application, Magento_TwoFactorAuth
+  module.xml              — sequence: Opengento_Application, Magento_TwoFactorAuth,
+                            Magento_Security (AdminSessionsManager subclass extends it)
   reset.json              — reset.json entries for third-party singletons we cannot subclass
   di.xml                  — global: preferences (Layout, Design, Page\Config, Area,
                             SessionRegistry), isIsolated=false, OM context plugin,
                             FrontendConfig scopeType
-  adminhtml/di.xml        — Widget\Context preference, AdminAuthSession plugins,
-                            SessionCommitPlugin (admin 302 race fix)
+  adminhtml/di.xml        — Widget\Context preference, AdminSessionsManager preference,
+                            AdminAuthSession plugins, SessionCommitPlugin (admin 302 race fix),
+                            MessageManagerSessionPlugin (admin flash messages)
   frontend/di.xml         — CustomerSession repair + FrontendConfig injection,
                             CheckoutSession plugins, SuccessValidator plugin,
                             PreserveOrderDataPlugin
@@ -64,6 +66,10 @@ Block/Backend/Widget/
 Model/App/
   Area.php                — clears _loadedParts['design'] in _resetState(); forces _initDesign()
                             to re-run so setArea() + setDefaultDesignTheme() restore the theme
+
+Model/Security/
+  AdminSessionsManager.php — ResetAfterRequestInterface subclass; nulls cached $currentSession
+                            in _resetState() so admin re-login after logout works on warm workers
 
 Model/View/
   Design.php              — ResetAfterRequestInterface subclass; fixes PHP 8.4 lazy ghost failure
@@ -96,6 +102,10 @@ Plugin/Checkout/Model/Session/
 Plugin/Customer/Model/
   CustomerSessionPlugin.php       — repairs CustomerSession before isLoggedIn() (reference break
                                     + lazy startup); uses FrontendConfig for session name
+
+Plugin/Message/
+  MessageManagerSessionPlugin.php — starts Message\Session before getMessages()/addMessage()
+                                    so admin flash messages survive POST -> 302 -> GET (adminhtml)
 
 Plugin/Quote/Model/
   QuoteManagementPlugin.php       — calls CheckoutSession::start() before placeOrder() so

@@ -76,9 +76,17 @@ With `SessionRegistry` cleared, `startSessions()` no longer pre-starts `Auth\Ses
 
 If `start()` in `AdminAuthSessionPlugin` throws silently (stale cookie, area code unavailable), `setUser()` writes to orphaned `_data`. `processLogin()` then calls `regenerateId()` → `session_start()` → `storage->init($_SESSION)`, overwriting `_data` from Redis (no user). The backstop checks `session_status()` before `processLogin()`, and if the session is not active, re-establishes the reference and re-writes the user before `regenerateId()` captures `$oldSession`.
 
+### Admin re-login after logout — `Model/Security/AdminSessionsManager`
+
+`Magento\Security\Model\AdminSessionsManager` is a singleton that lazily caches the `admin_user_session` DB row in `$currentSession` and never clears it. `Plugin\AuthSession::aroundProlong()` destroys any session whose cached row is not `isLoggedInStatus()`. After a logout sets that row to `LOGGED_OUT`, a warm worker keeps the stale row and destroys the next login on that worker — bouncing the admin back to the login screen (intermittent, per worker). Our subclass implements `ResetAfterRequestInterface` and nulls `$currentSession` in `_resetState()` so each request reloads the row that matches the session actually in play.
+
 ### Admin session commit — `Plugin/App/SessionCommitPlugin` (adminhtml)
 
 On admin login, `Auth\Session` is regenerated and a 302 redirect is sent. A second worker picks up the GET before the first worker's `finally` block has written the new session to Redis. `closeSessions()` in `afterLaunch` writes all sessions before `sendResponse()` fires.
+
+### Admin flash messages — `Plugin/Message/MessageManagerSessionPlugin`
+
+`Magento\Framework\Message\Session` (namespace `message`) is a per-worker singleton whose `Storage._data` is bound to `$_SESSION['message']` only inside `start()`. In worker mode `start()` runs once; afterwards `_resetState()` clears `_data` and the next `session_start()` replaces the `$_SESSION['message']` slot, breaking the reference (the same Scenario 1 break handled for `CustomerSession`). `Message\Manager` then writes to orphaned `_data` that is never committed, so admin "You saved the …" messages are silently lost across the POST → 302 → GET cycle. The plugin calls `start()` before the first `getMessages()`/`addMessage()`, which re-binds `_data` and registers the session so `SessionCommitPlugin` commits it. Registered in `adminhtml` only.
 
 ### REST session commit — `Plugin/App/SessionCommitPlugin` (webapi_rest)
 
@@ -116,9 +124,9 @@ If `last_order_id` is missing from the checkout session when the success page re
 
 Safety net for the `Layout._xml` root-cause fix. If `DepersonalizeChecker` incorrectly treats the success page as cacheable and `clearStorage()` is called, this plugin saves `last_real_order_id`, `last_order_id`, and `last_order_status` before the clear and restores them after. Scoped to `checkout_onepage_success` only.
 
-### Hyva CSP state — `ViewModel/HyvaCsp`
+### Hyva CSP state — moved to companion module
 
-`HyvaCsp` caches `$memoizedPolicies` and `$memoizedAreaCode` in private properties after the first call. If any request populates `$memoizedPolicies` without `unsafe-eval` (e.g. strict-CSP checkout), all subsequent requests serve `alpine3-csp.min.js` site-wide, breaking every Alpine component. `_resetState()` nullifies both private parent properties via reflection.
+The `HyvaCsp` reset now lives in the companion module `mage-os/module-worker-mode-hyva`, which sequences after `Hyva_Theme` so it only compiles on Hyvä stores. See that module's README. This base module no longer references Hyvä.
 
 ---
 
@@ -126,7 +134,10 @@ Safety net for the `Layout._xml` root-cause fix. If `DepersonalizeChecker` incor
 
 - `opengento/module-application` — the FrankenPHP worker scaffolding (required)
 - `opengento/magento2-frankenphp-base` — the base FrankenPHP worker module (required)
-- `Hyva_Theme` — the Hyva theme (soft; `HyvaCsp` preference only applies when Hyva is installed)
+- `Magento_Security` — sequenced; the `AdminSessionsManager` subclass extends its class (required)
+- `Magento_TwoFactorAuth` — sequenced so the admin `Auth\Session` plugins load in the correct order (required)
+
+Hyvä support is provided separately by the companion module `mage-os/module-worker-mode-hyva`.
 
 ## Post-install commands
 

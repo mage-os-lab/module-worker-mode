@@ -18,8 +18,9 @@
     "require": {
         "php": "~8.0.0 || ~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
         "opengento/magento2-frankenphp-base": "^0.9.4",
-        "opengento/module-application": "*",
-        "magento/module-two-factor-auth": "*"
+        "opengento/module-application": "0.11.2",
+        "magento/module-two-factor-auth": "*",
+        "magento/module-security": "*"
     },
     "suggest": {
         "mage-os/module-worker-mode-hyva": "Provides support for Hyva Theme & Worker Mode"
