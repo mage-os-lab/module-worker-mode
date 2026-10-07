@@ -52,4 +52,10 @@
         <plugin name="mage_os_worker_mode_checkout_preserve_order_data"
                 type="MageOS\WorkerMode\Plugin\Checkout\Model\Session\PreserveOrderDataPlugin"/>
     </type>
+
+    <!-- Pricing render keeps a nested layout across requests; sync its cacheable flag per request. -->
+    <type name="Magento\Framework\Pricing\Render\Layout">
+        <plugin name="mage_os_worker_mode_pricing_layout_cacheable"
+                type="MageOS\WorkerMode\Plugin\Pricing\Render\LayoutCacheablePlugin"/>
+    </type>
 </config>
